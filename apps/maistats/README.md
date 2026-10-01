@@ -1,69 +1,69 @@
 # maistats
 
-基于 Vite + React 的 Web 前端，用于浏览静态 song database 与 `maistats-record-collector` 的数据。
+Vite + React frontend for browsing a static song database alongside `maistats-record-collector` data.
 
 ## Requirements
 
-- Node.js 20+（建议 20 LTS 或更高）
+- Node.js 20+ (20 LTS or newer recommended)
 - npm 10+
 
 ## What It Does
 
-- 浏览分数列表与游玩记录
-- 按曲名、谱面类型、难度、版本、评级、FC、SYNC 筛选
-- 按达成率、定数、间隔天数排序及范围搜索
-- 查看单曲详情与每个谱面的 `play_count`
-- 通过部署环境变量与浏览器内的界面设置切换 API origin
+- Browse score lists and play logs
+- Filter by title, chart type, difficulty, version, rank, FC and SYNC
+- Sort and range-search by achievement, internal level and days since played
+- Per-song detail view with chart-level `play_count`
+- Switch API origins through deploy-time environment variables or in-browser UI settings
 
 ## Quick Start
 
-本应用是 monorepo 中的 npm workspace 成员。以下命令均在仓库根目录执行。
+This app is an npm workspace member of the monorepo. The commands below run from the repository root.
 
-1. 安装依赖：
+1. Install dependencies:
 
 ```bash
 npm ci
 ```
 
-2. 创建环境变量文件：
+2. Create the environment file:
 
 ```bash
 cp apps/maistats/.env.example apps/maistats/.env
 ```
 
-3. 如有需要，修改 `.env`：
+3. Edit `.env` if needed:
 
 ```env
 SONG_DATABASE_URL=https://maimai-charts.muhwan.dev
 RECORD_COLLECTOR_SERVER_URL=<your-record-collector-server-origin>
 ```
 
-本地默认值见 [.env.example](./.env.example)。
+The local defaults live in [.env.example](./.env.example).
 
-4. 启动开发服务器：
+4. Start the dev server:
 
 ```bash
 npm run dev --workspace apps/maistats
 ```
 
-可访问的本地地址由 Vite 输出到终端。
+Vite prints the reachable local address to the terminal.
 
 ## Environment Variables
 
 - `SONG_DATABASE_URL`
-  - 静态 song database 的基础 URL
+  - base URL of the static song database
 - `RECORD_COLLECTOR_SERVER_URL`
-  - `maistats-record-collector` 的 origin
+  - origin of `maistats-record-collector`
 
-这些值会作为应用默认的 API 连接地址。运行期间可在界面的 `Server Connection` 中按浏览器覆盖。
+These are the app's default API targets. At runtime they can be overridden per browser under `Server Connection` in the UI.
 
-部署到 Cloudflare Pages 时，请勿把这些值提交到仓库，而应配置为 Pages 的环境变量。
+When deploying to Cloudflare Pages, set these as Pages environment variables rather than committing them to the repository.
 
 ## Scripts
 
-- `npm run dev --workspace apps/maistats`：启动开发服务器
-- `npm run build --workspace apps/maistats`：先做 TypeScript 检查，再生成生产构建
-- `npm run preview --workspace apps/maistats`：在本地预览构建结果
+- `npm run dev --workspace apps/maistats`: start the dev server
+- `npm run build --workspace apps/maistats`: type-check, then produce a production build
+- `npm run preview --workspace apps/maistats`: preview the build locally
 
 ## Build
 
@@ -71,46 +71,46 @@ npm run dev --workspace apps/maistats
 npm run build --workspace apps/maistats
 ```
 
-构建产物生成在 `dist/`。
+The build output is written to `dist/`.
 
-如需预览：
+To preview it:
 
 ```bash
 npm run preview --workspace apps/maistats
 ```
 
-预览地址由 Vite 输出到终端。
+Vite prints the preview address to the terminal.
 
 ## Deploying With Cloudflare Pages
 
-推荐的部署目标是 Cloudflare Pages。
+Cloudflare Pages is the recommended target.
 
-默认配置：
+Default settings:
 
-- 关联 GitHub 仓库
-- Production branch：`main`
-- Framework preset：`Vite` 或 `None`
-- Build command：`npm ci && npm run build --workspace apps/maistats`
-- Build output directory：`apps/maistats/dist`
-- Root directory：仓库根目录
+- Connect the GitHub repository
+- Production branch: `main`
+- Framework preset: `Vite` or `None`
+- Build command: `npm ci && npm run build --workspace apps/maistats`
+- Build output directory: `apps/maistats/dist`
+- Root directory: repository root
 - `NODE_VERSION=20`
-- Deploy command：`npx wrangler deploy --config apps/maistats/wrangler.jsonc`
+- Deploy command: `npx wrangler deploy --config apps/maistats/wrangler.jsonc`
 
-环境变量：
+Environment variables:
 
-- 在 Production 与 Preview 中都设置 `SONG_DATABASE_URL`、`RECORD_COLLECTOR_SERVER_URL`
-- 如有需要，绑定自定义域名
+- Set `SONG_DATABASE_URL` and `RECORD_COLLECTOR_SERVER_URL` for both Production and Preview
+- Attach a custom domain if needed
 
-本仓库包含 `@cloudflare/vite-plugin` 与 `wrangler.jsonc`，因此也支持在根目录执行 `npx wrangler deploy --config apps/maistats/wrangler.jsonc` 进行部署。
+The repository includes `@cloudflare/vite-plugin` and `wrangler.jsonc`, so deploying from the root with `npx wrangler deploy --config apps/maistats/wrangler.jsonc` also works.
 
-运行方式：
+Behaviour:
 
-- 推送到 `main` 时部署 production
-- 创建或更新 PR 时部署 preview
+- Pushes to `main` deploy production
+- Opening or updating a PR deploys a preview
 
 ## Data Notes
 
-- Score 页面的 Last Played/Days 来自 `maistats-record-collector` 的 `/api/scores/rated`（`scores` 表的 `last_played_at`）。
-- Playlog 页面来自 `maistats-record-collector` 的 `/api/recent?limit=10000`（`playlogs` 表）。
-- 每个谱面的 `play_count` 不由 playlog 推算，而是直接使用 `maistats-record-collector` score API 返回的值。
-- 如需更长时间跨度的分析，需要在 record collector 中新增 API（例如查询全部 playlog）。
+- Last Played/Days on the Score screen come from `maistats-record-collector`'s `/api/scores/rated` (the `last_played_at` column of `scores`).
+- The Playlog screen reads `maistats-record-collector`'s `/api/recent?limit=10000` (the `playlogs` table).
+- Per-chart `play_count` is not inferred from play logs; it uses the value the record collector's score API returns.
+- Longer-range analysis would need an additional record collector API (for example, a full playlog query).
