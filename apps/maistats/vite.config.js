@@ -11,6 +11,12 @@ export default defineConfig(({ mode }) => {
         server: {
             host: true,
             port: 5174,
+            // Mirror what nginx does in the container so the dev server is also
+            // same-origin and the collector URL never has to be set by hand.
+            proxy: {
+                '/api': 'http://localhost:3000',
+                '/health': 'http://localhost:3000',
+            },
         },
     };
 });
