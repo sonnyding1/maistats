@@ -20,8 +20,10 @@ const JACKET = 54;
 const PIXEL_RATIO = 2;
 const SECTION_GAP = 16;
 
+// Song titles are overwhelmingly Japanese, so this poster leads with Japanese
+// faces and only then falls back to the Chinese ones used by the app UI.
 const FONT =
-  "'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif";
+  "'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Noto Sans JP', 'PingFang SC', 'Microsoft YaHei', sans-serif";
 
 export interface B50ExportInput {
   oldRows: ScoreRow[];
@@ -95,19 +97,49 @@ function ellipsize(ctx: CanvasRenderingContext2D, text: string, maxWidth: number
   return `${clipped}…`;
 }
 
-function loadJacket(url: string | null): Promise<HTMLImageElement | null> {
-  if (!url) return Promise.resolve(null);
+type Jacket = ImageBitmap | HTMLImageElement;
 
-  return new Promise((resolve) => {
-    const img = new Image();
-    // Covers are served with `access-control-allow-origin: *`, so the canvas
-    // stays untainted and can still be exported.
-    img.crossOrigin = 'anonymous';
-    img.referrerPolicy = 'no-referrer';
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = url;
-  });
+async function loadJacket(url: string | null): Promise<Jacket | null> {
+  if (!url) return null;
+
+  try {
+    // Fetched rather than assigned to `<img crossOrigin>`: the cover host only
+    // sends `access-control-allow-origin` when the request carries an Origin
+    // header, yet it also caches the no-Origin responses the app's own jacket
+    // <img> tags produce. A cached copy replayed for the CORS request has no
+    // CORS headers and the load fails, which surfaced as every jacket falling
+    // back to a letter. `no-store` skips that cached copy.
+    const response = await fetch(url, {
+      mode: 'cors',
+      credentials: 'omit',
+      cache: 'no-store',
+    });
+    if (!response.ok) return null;
+
+    const blob = await response.blob();
+
+    // Decoding to an ImageBitmap keeps the draw same-origin, so the canvas is
+    // never tainted and `toBlob` still works.
+    if (typeof createImageBitmap === 'function') {
+      return await createImageBitmap(blob);
+    }
+
+    return await new Promise<HTMLImageElement | null>((resolve) => {
+      const objectUrl = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(img);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(null);
+      };
+      img.src = objectUrl;
+    });
+  } catch {
+    return null;
+  }
 }
 
 function drawText(
@@ -133,7 +165,7 @@ function drawTile(
   w: number,
   row: ScoreRow,
   rank: number,
-  jacket: HTMLImageElement | null,
+  jacket: Jacket | null,
   input: B50ExportInput,
 ): void {
   const panel = cssVar('--panel', '#111116');
@@ -271,6 +303,12 @@ export async function renderB50Png(input: B50ExportInput): Promise<Blob> {
   const newH = sectionHeight(input.newRows.length);
   const height = PAD + headerH + SECTION_GAP + oldH + SECTION_GAP + newH + PAD;
 
+  // Measuring and drawing before the webfont arrives would silently lay the
+  // poster out in a fallback face.
+  if (document.fonts?.ready) {
+    await document.fonts.ready;
+  }
+
   const canvas = document.createElement('canvas');
   canvas.width = WIDTH * PIXEL_RATIO;
   canvas.height = height * PIXEL_RATIO;
@@ -359,7 +397,7 @@ export async function renderB50Png(input: B50ExportInput): Promise<Blob> {
   ];
 
   // Preload every sleeve once, up front.
-  const jackets = new Map<string, HTMLImageElement | null>();
+  const jackets = new Map<string, Jacket | null>();
   const allRows = [...input.oldRows, ...input.newRows];
   await Promise.all(
     allRows.map(async (row) => {

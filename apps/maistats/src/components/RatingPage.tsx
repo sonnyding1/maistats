@@ -160,25 +160,39 @@ export function RatingPage({
   const handleCopyImage = useCallback(async () => {
     setExportState('working');
 
-    let blob: Blob;
-    try {
-      blob = await renderPng();
-    } catch {
-      setExportState('render-error');
+    if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
+      setExportState('clipboard-error');
       return;
     }
 
-    // Browsers gate image clipboard writes behind a permission; on localhost it
-    // is normally auto-granted, but a denial is a different failure from a render
-    // failure and deserves its own message.
+    const render = renderPng();
+    // Claim the rejection now so the promise path below cannot surface as an
+    // unhandled rejection before we await it.
+    render.catch(() => undefined);
+    let rendered = false;
+
+    // Safari only permits a clipboard write from a user gesture, and awaiting the
+    // render first loses that gesture - which is what made the first tap fail and
+    // the second one succeed. ClipboardItem accepts a *promise*, so write() can
+    // stay synchronous while the PNG is still being drawn.
     try {
-      if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
-        throw new Error('Clipboard images unsupported');
-      }
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': render as unknown as Blob }),
+      ]);
+      rendered = true;
+      setExportState('copied');
+      return;
+    } catch {
+      // Some browsers reject a promise here; fall back to rendering first.
+    }
+
+    try {
+      const blob = await render;
+      rendered = true;
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
       setExportState('copied');
     } catch {
-      setExportState('clipboard-error');
+      setExportState(rendered ? 'clipboard-error' : 'render-error');
     }
   }, [renderPng]);
 
