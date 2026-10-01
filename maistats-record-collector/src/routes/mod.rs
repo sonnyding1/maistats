@@ -2,6 +2,7 @@ mod debug;
 mod health;
 mod logs;
 mod player;
+mod playlogs;
 mod poll;
 mod rating;
 mod recent;
@@ -24,6 +25,10 @@ pub(crate) fn create_routes(state: AppState) -> Router {
     let mut api_routes = Router::new()
         .route("/api/scores/rated", get(scores::get_all_rated_scores))
         .route("/api/scores/refresh", post(scores::refresh_song_scores))
+        .route(
+            "/api/playlogs/backfill",
+            post(playlogs::backfill_playlog_details),
+        )
         .route("/api/songs/scores", get(scores::get_song_detail_scores))
         .route("/api/player", get(player::get_player))
         .route("/api/rating/targets", get(rating::get_rating_targets))

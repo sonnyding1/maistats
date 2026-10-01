@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
 use eyre::WrapErr;
@@ -133,8 +133,8 @@ async fn store_playlog_detail_in_tx(
     played_at_unixtime: i64,
     detail: &ParsedPlaylogDetail,
     playlog_detail_idx: Option<&str>,
-) -> eyre::Result<()> {
-    sqlx::query(
+) -> eyre::Result<u64> {
+    let result = sqlx::query(
         r#"
 UPDATE playlogs SET
   playlog_detail_idx = ?2,
@@ -186,7 +186,44 @@ ON CONFLICT(played_at_unixtime, note_type) DO UPDATE SET
         .wrap_err("upsert playlog judgement")?;
     }
 
-    Ok(())
+    Ok(result.rows_affected())
+}
+
+/// Backfill helper: applies detail rows to playlogs that already exist, matched
+/// on `played_at_unixtime`, bypassing the recent-sync new-credit filter.
+///
+/// Returns the number of `playlogs` rows actually updated, so callers can tell
+/// how many of the supplied details matched a stored play.
+pub(crate) async fn update_playlog_details(
+    pool: &SqlitePool,
+    details: &[(i64, String, ParsedPlaylogDetail)],
+) -> eyre::Result<u64> {
+    let mut tx = pool.begin().await.wrap_err("begin transaction")?;
+    let mut updated = 0;
+
+    for (played_at_unixtime, playlog_detail_idx, detail) in details {
+        updated += store_playlog_detail_in_tx(
+            &mut tx,
+            *played_at_unixtime,
+            detail,
+            Some(playlog_detail_idx.as_str()),
+        )
+        .await?;
+    }
+
+    tx.commit().await.wrap_err("commit transaction")?;
+    Ok(updated)
+}
+
+/// `played_at_unixtime` values for playlogs that have no detail data yet.
+pub(crate) async fn playlogs_missing_details(pool: &SqlitePool) -> eyre::Result<HashSet<i64>> {
+    let rows: Vec<(i64,)> =
+        sqlx::query_as("SELECT played_at_unixtime FROM playlogs WHERE note_count IS NULL")
+            .fetch_all(pool)
+            .await
+            .wrap_err("load playlogs missing details")?;
+
+    Ok(rows.into_iter().map(|(value,)| value).collect())
 }
 
 pub(crate) async fn store_player_profile_snapshot(
