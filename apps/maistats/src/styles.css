@@ -1143,8 +1143,16 @@ select:focus-visible {
 
 .rating-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(clamp(184px, 16vw, 250px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(184px, 1fr));
   gap: 6px;
+}
+
+/* Exactly five columns on desktop; narrower screens keep the responsive
+   auto-fill rules further down so the tiles never get crushed. */
+@media (min-width: 1101px) {
+  .rating-card-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 
 /* ---- Compact B50 tile: small jacket left, three short lines right. ---- */
@@ -1419,6 +1427,32 @@ select:focus-visible {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* In the sidebar the panel is narrow, so the buttons stack full width. */
+.rating-export-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.rating-export-panel .rating-export-bar {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.rating-export-panel .rating-export-button {
+  width: 100%;
+}
+
+/* Hidden on desktop, where the sidebar copy is visible. */
+.rating-export-mobile {
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .rating-export-mobile {
+    display: grid;
+  }
 }
 
 .rating-export-button {

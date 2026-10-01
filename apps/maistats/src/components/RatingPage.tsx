@@ -165,36 +165,51 @@ export function RatingPage({
   const saveLabel = exportState === 'saved' ? t('rating.exportSaved') : t('rating.exportSave');
   const copyLabel = exportState === 'copied' ? t('rating.exportCopied') : t('rating.exportCopy');
 
+  const exportControls = (
+    <section className="panel rating-export-panel">
+      <div className="panel-heading compact">
+        <div>
+          <h2>{t('rating.exportPanelTitle')}</h2>
+        </div>
+      </div>
+      <div className="rating-export-bar">
+        <button
+          type="button"
+          className="rating-export-button"
+          onClick={handleSaveImage}
+          disabled={isWorking}
+        >
+          {isWorking ? t('rating.exportWorking') : saveLabel}
+        </button>
+        <button
+          type="button"
+          className="rating-export-button"
+          onClick={handleCopyImage}
+          disabled={isWorking}
+        >
+          {isWorking ? t('rating.exportWorking') : copyLabel}
+        </button>
+      </div>
+      {exportState === 'render-error' || exportState === 'clipboard-error' ? (
+        <span className="rating-export-status error">
+          {exportState === 'clipboard-error'
+            ? t('rating.exportClipboardFailed')
+            : t('rating.exportFailed')}
+        </span>
+      ) : null}
+    </section>
+  );
+
   return (
     <div className="explorer-layout">
-      <aside className="sidebar-column">{sidebarTopContent}</aside>
+      <aside className="sidebar-column">
+        {sidebarTopContent}
+        {exportControls}
+      </aside>
 
       <div className="table-column rating-table-column">
-        <div className="rating-export-bar">
-          <button
-            type="button"
-            className="rating-export-button"
-            onClick={handleSaveImage}
-            disabled={isWorking}
-          >
-            {isWorking ? t('rating.exportWorking') : saveLabel}
-          </button>
-          <button
-            type="button"
-            className="rating-export-button"
-            onClick={handleCopyImage}
-            disabled={isWorking}
-          >
-            {isWorking ? t('rating.exportWorking') : copyLabel}
-          </button>
-          {exportState === 'render-error' || exportState === 'clipboard-error' ? (
-            <span className="rating-export-status error">
-              {exportState === 'clipboard-error'
-                ? t('rating.exportClipboardFailed')
-                : t('rating.exportFailed')}
-            </span>
-          ) : null}
-        </div>
+        {/* The sidebar is hidden below 1201px, so the controls need a second home. */}
+        <div className="rating-export-mobile">{exportControls}</div>
 
         {/* Everything inside this node is captured by the PNG export. */}
         <div className="rating-export-area" ref={exportRef}>
