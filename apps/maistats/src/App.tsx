@@ -1757,6 +1757,10 @@ function App() {
               oldRatingTotal={oldRatingTotal}
               newRows={newRatingRows}
               oldRows={oldRatingRows}
+              seasonVersion={
+                versionOptions.length > 0 ? versionOptions[versionOptions.length - 1] : null
+              }
+              playerProfile={playerProfile}
               onOpenHistory={handleOpenHistory}
             />
           </>

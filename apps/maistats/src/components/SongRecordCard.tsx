@@ -4,7 +4,6 @@ import { useI18n } from '../app/i18n';
 import { formatNumber, formatPercent } from '../app/utils';
 import { toIntegerRating } from '../derive';
 import type { ScoreRow } from '../types';
-import { ChartTypeLabel } from './ChartTypeLabel';
 import { DifficultyLabel, getDifficultyToneClass } from './DifficultyLabel';
 import { Jacket } from './Jacket';
 import { LevelCell } from './LevelCell';
@@ -13,7 +12,6 @@ interface SongRecordCardProps {
   row: ScoreRow;
   songInfoUrl: string;
   topLeft: string;
-  topRight: string;
   onOpenHistory: (row: ScoreRow) => void;
 }
 
@@ -26,67 +24,62 @@ function handleCardKeyDown(event: KeyboardEvent<HTMLElement>, onOpenHistory: () 
   onOpenHistory();
 }
 
-export function SongRecordCard({
-  row,
-  songInfoUrl,
-  topLeft,
-  topRight,
-  onOpenHistory,
-}: SongRecordCardProps) {
+/**
+ * Compact B50 tile: small jacket on the left, three short lines on the right.
+ * Deliberately dense — the rating page renders 50 of these, so every extra line
+ * multiplies the page height.
+ */
+export function SongRecordCard({ row, songInfoUrl, topLeft, onOpenHistory }: SongRecordCardProps) {
   const { locale, t } = useI18n();
   const handleOpenHistory = () => onOpenHistory(row);
 
   return (
     <article
-      className={`rating-song-card ${getDifficultyToneClass(row.difficulty)}`}
+      className={`rating-song-tile ${getDifficultyToneClass(row.difficulty)}`}
       role="button"
       tabIndex={0}
       aria-label={t('history.openChartHistory', { title: row.title })}
       onClick={handleOpenHistory}
       onKeyDown={(event) => handleCardKeyDown(event, handleOpenHistory)}
     >
-      <div className={`rating-song-stage ${getDifficultyToneClass(row.difficulty)}`}>
-        <div className="rating-song-jacket-wrap">
-          <Jacket
-            songInfoUrl={songInfoUrl}
-            imageName={row.imageName}
-            title={row.title}
-            className="rating-song-jacket"
-          />
-        </div>
-        <div className="rating-song-stage-gradient" />
-        <div className="rating-song-stage-topline">
-          <span>{topLeft}</span>
-          <span>{topRight}</span>
-        </div>
-        <div className="rating-song-stage-badges">
-          <ChartTypeLabel chartType={row.chartType} />
-          <DifficultyLabel difficulty={row.difficulty} short className="rating-difficulty-chip" />
-        </div>
-        <div className="rating-song-rating-chip">
-          <strong>{formatNumber(toIntegerRating(row.rating), locale)}</strong>
-        </div>
+      <div className="rating-song-tile-jacket">
+        <Jacket
+          songInfoUrl={songInfoUrl}
+          imageName={row.imageName}
+          title={row.title}
+          className="rating-song-tile-cover"
+        />
+        <span className="rating-song-tile-rank">{topLeft}</span>
       </div>
-      <div className="rating-song-info">
-        <h3>{row.title}</h3>
-        <div className="rating-song-level-row">
-          <span>{row.level ? `Lv ${row.level}` : 'Lv -'}</span>
+
+      <div className="rating-song-tile-body">
+        <h3 className="rating-song-tile-title" title={row.title}>
+          {row.title}
+        </h3>
+
+        <div className="rating-song-tile-meta">
+          <span className="rating-song-tile-achievement">
+            {formatPercent(row.achievementPercent)}
+          </span>
+          <span className="rating-song-tile-score-rank">{row.rank ?? '-'}</span>
+          {row.fc ? <span className="rating-song-tile-flag">{row.fc}</span> : null}
+          {row.sync ? <span className="rating-song-tile-flag">{row.sync}</span> : null}
+        </div>
+
+        <div className="rating-song-tile-footer">
+          <DifficultyLabel
+            difficulty={row.difficulty}
+            short
+            className="rating-difficulty-chip"
+          />
           <LevelCell
             internalLevel={row.internalLevel}
             isInternalLevelEstimated={row.isInternalLevelEstimated}
             difficulty={row.difficulty}
           />
-        </div>
-        <div className="rating-song-stat-grid">
-          <div className="rating-song-stat">
-            <strong>{formatPercent(row.achievementPercent)}</strong>
-          </div>
-          <div className="rating-song-stat">
-            <strong>{row.rank ?? '-'}</strong>
-          </div>
-          <div className="rating-song-stat">
-            <strong>{row.fc ?? '-'}</strong>
-          </div>
+          <strong className="rating-song-tile-value">
+            {formatNumber(toIntegerRating(row.rating), locale)}
+          </strong>
         </div>
       </div>
     </article>
