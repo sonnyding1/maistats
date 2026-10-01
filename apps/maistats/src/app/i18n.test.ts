@@ -21,16 +21,16 @@ describe('interpolate', () => {
 });
 
 describe('detectSystemLanguage', () => {
-  it('detects korean from navigator languages', () => {
+  it('detects chinese from navigator languages', () => {
     vi.stubGlobal('navigator', {
-      languages: ['ko-KR', 'en-US'],
+      languages: ['zh-CN', 'en-US'],
       language: 'en-US',
     });
 
-    expect(detectSystemLanguage()).toBe('ko');
+    expect(detectSystemLanguage()).toBe('zh');
   });
 
-  it('falls back to english for non-korean locales', () => {
+  it('falls back to english for non-chinese locales', () => {
     vi.stubGlobal('navigator', {
       languages: ['ja-JP'],
       language: 'ja-JP',
@@ -43,7 +43,7 @@ describe('detectSystemLanguage', () => {
 describe('normalizeLanguagePreference', () => {
   it('accepts supported preferences', () => {
     expect(normalizeLanguagePreference('system')).toBe('system');
-    expect(normalizeLanguagePreference('ko')).toBe('ko');
+    expect(normalizeLanguagePreference('zh')).toBe('zh');
     expect(normalizeLanguagePreference('en')).toBe('en');
   });
 

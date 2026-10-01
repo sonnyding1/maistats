@@ -33,7 +33,7 @@ interface HistoryPlotTheme {
   markerLine: string;
 }
 
-const FONT_FAMILY = "'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif";
+const FONT_FAMILY = "'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif";
 const RANK_THRESHOLDS: Array<{ value: number; label: string }> = [
   { value: 97.0, label: 'S' },
   { value: 98.0, label: 'S+' },

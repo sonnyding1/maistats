@@ -469,7 +469,7 @@ const PLOT_HEIGHT = 650;
 const PLOT_MARGIN = { l: 60, r: 48, t: 20, b: 40 };
 const PLOT_Y_MAX = 101.0;
 const PLOT_JITTER = 0.35;
-const PLOT_FONT_FAMILY = "'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif";
+const PLOT_FONT_FAMILY = "'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif";
 const MISSING_LAST_PLAYED_LABEL = '-';
 
 function mulberry32(seed: number): () => number {

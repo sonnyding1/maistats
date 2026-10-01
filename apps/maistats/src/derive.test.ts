@@ -97,7 +97,9 @@ describe('buildSongDetailRows', () => {
 
 describe('toDateLabel', () => {
   it('formats using the provided locale', () => {
-    expect(toDateLabel(0, 'en-US')).toContain('1970');
+    // Mid-year on purpose: epoch 0 lands in the previous year west of UTC, so a
+    // literal 0 made this assertion fail anywhere but a UTC machine.
+    expect(toDateLabel(Date.UTC(2026, 5, 15), 'en-US')).toContain('2026');
   });
 
   it('returns null for null timestamps', () => {

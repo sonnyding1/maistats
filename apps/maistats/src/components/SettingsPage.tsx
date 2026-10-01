@@ -310,7 +310,7 @@ export function SettingsPage({
                 onChange={(event) => setLanguagePreference(event.target.value as LanguagePreference)}
               >
                 <option value="system">{t('settings.language.optionSystem')}</option>
-                <option value="ko">{t('settings.language.optionKo')}</option>
+                <option value="zh">{t('settings.language.optionZh')}</option>
                 <option value="en">{t('settings.language.optionEn')}</option>
               </select>
             </label>

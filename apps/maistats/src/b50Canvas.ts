@@ -21,7 +21,7 @@ const PIXEL_RATIO = 2;
 const SECTION_GAP = 16;
 
 const FONT =
-  "'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif";
+  "'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif";
 
 export interface B50ExportInput {
   oldRows: ScoreRow[];
