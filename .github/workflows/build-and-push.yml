@@ -14,7 +14,7 @@ on:
       - crates/**
       - maistats-record-collector/**
       - scripts/**
-  workflow_dispatch:  # 수동 트리거 허용
+  workflow_dispatch:  # allow manual runs
 
 env:
   REGISTRY: ghcr.io
