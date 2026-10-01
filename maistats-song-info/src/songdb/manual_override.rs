@@ -162,8 +162,7 @@ mod tests {
               "artist": "",
               "image_url": "https://example.com/test.png",
               "aliases": {
-                "en": ["Alias"],
-                "ko": ["별칭"]
+                "en": ["Alias"]
               },
               "sheets": [
                 {
@@ -189,7 +188,6 @@ mod tests {
         assert!(!sheet.region.jp);
         assert!(sheet.region.intl);
         assert_eq!(song.aliases.en, vec!["Alias".to_string()]);
-        assert_eq!(song.aliases.ko, vec!["별칭".to_string()]);
     }
 
     #[test]
@@ -233,8 +231,7 @@ mod tests {
               "artist": "x0o0x_",
               "image_url": "https://example.com/test.png",
               "aliases": {
-                "en": ["empty", "blank"],
-                "ko": ["공백", "키사라기역"]
+                "en": ["empty", "blank"]
               },
               "sheets": [
                 {
@@ -257,10 +254,6 @@ mod tests {
         assert_eq!(
             rows.aliases[0].1.en,
             vec!["empty".to_string(), "blank".to_string()]
-        );
-        assert_eq!(
-            rows.aliases[0].1.ko,
-            vec!["공백".to_string(), "키사라기역".to_string()]
         );
     }
 }

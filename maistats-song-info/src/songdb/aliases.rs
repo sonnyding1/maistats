@@ -4,25 +4,21 @@ use std::collections::HashMap;
 
 // The GCM-bot author granted permission to reuse these maimai alias files here.
 const GENERATED_EN_ALIAS_TSV: &str = include_str!("data/en_generated_aliases.tsv");
-const GENERATED_KO_ALIAS_TSV: &str = include_str!("data/ko_generated_aliases.tsv");
 const EN_ALIAS_URL: &str =
     "https://raw.githubusercontent.com/lomotos10/GCM-bot/main/data/aliases/en/maimai.tsv";
-const KO_ALIAS_URL: &str =
-    "https://raw.githubusercontent.com/lomotos10/GCM-bot/main/data/aliases/ko/maimai.tsv";
 
 pub(crate) async fn fetch_song_aliases(
     client: &reqwest::Client,
 ) -> eyre::Result<HashMap<String, SongAliases>> {
-    let generated_ko =
-        parse_alias_tsv(GENERATED_KO_ALIAS_TSV).wrap_err("parse bundled ko aliases")?;
     let generated_en =
         parse_alias_tsv(GENERATED_EN_ALIAS_TSV).wrap_err("parse bundled en aliases")?;
     let en = fetch_aliases(client, "en", EN_ALIAS_URL).await?;
     let en = merge_language_alias_maps(en, generated_en);
-    let ko = fetch_aliases(client, "ko", KO_ALIAS_URL).await?;
-    let ko = merge_language_alias_maps(ko, generated_ko);
 
-    Ok(merge_alias_maps(en, ko))
+    Ok(en
+        .into_iter()
+        .map(|(title, aliases)| (title, SongAliases { en: aliases }))
+        .collect())
 }
 
 async fn fetch_aliases(
@@ -74,23 +70,6 @@ fn parse_alias_tsv(input: &str) -> eyre::Result<HashMap<String, Vec<String>>> {
     }
 
     Ok(aliases_by_title)
-}
-
-fn merge_alias_maps(
-    en: HashMap<String, Vec<String>>,
-    ko: HashMap<String, Vec<String>>,
-) -> HashMap<String, SongAliases> {
-    let mut merged = HashMap::<String, SongAliases>::new();
-
-    for (title, aliases) in en {
-        merged.entry(title).or_default().en = aliases;
-    }
-
-    for (title, aliases) in ko {
-        merged.entry(title).or_default().ko = aliases;
-    }
-
-    merged
 }
 
 fn merge_language_alias_maps(

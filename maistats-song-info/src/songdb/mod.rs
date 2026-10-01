@@ -1208,7 +1208,6 @@ mod tests {
             "Link".to_string(),
             SongAliases {
                 en: vec!["Fetched Alias".to_string()],
-                ko: vec!["가져온 별칭".to_string()],
             },
         )]);
         let manual_override_aliases = HashMap::from([
@@ -1216,14 +1215,12 @@ mod tests {
                 songs[0].identity.clone(),
                 SongAliases {
                     en: vec!["Link (maimai)".to_string()],
-                    ko: vec!["링크 (마이마이)".to_string()],
                 },
             ),
             (
                 songs[1].identity.clone(),
                 SongAliases {
                     en: vec!["Link nico".to_string()],
-                    ko: vec!["링크".to_string()],
                 },
             ),
         ]);

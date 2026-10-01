@@ -31,13 +31,11 @@ pub struct SongCatalogSong {
 pub struct SongAliases {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub en: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub ko: Vec<String>,
 }
 
 impl SongAliases {
     pub fn is_empty(&self) -> bool {
-        self.en.is_empty() && self.ko.is_empty()
+        self.en.is_empty()
     }
 }
 
