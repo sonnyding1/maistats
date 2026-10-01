@@ -1,3 +1,4 @@
+mod debug;
 mod health;
 mod logs;
 mod player;
@@ -20,7 +21,7 @@ use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer};
 use crate::state::AppState;
 
 pub(crate) fn create_routes(state: AppState) -> Router {
-    let api_routes = Router::new()
+    let mut api_routes = Router::new()
         .route("/api/scores/rated", get(scores::get_all_rated_scores))
         .route("/api/scores/refresh", post(scores::refresh_song_scores))
         .route("/api/songs/scores", get(scores::get_song_detail_scores))
@@ -30,16 +31,25 @@ pub(crate) fn create_routes(state: AppState) -> Router {
         .route("/api/poll", post(poll::trigger_poll))
         .route("/api/logs", get(logs::get_logs))
         .route("/api/today", get(today::get_today))
-        .route("/api/version", get(version::get_version))
-        .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(DefaultMakeSpan::new().level(tracing::Level::INFO))
-                .on_response(
-                    DefaultOnResponse::new()
-                        .level(tracing::Level::INFO)
-                        .latency_unit(LatencyUnit::Millis),
-                ),
+        .route("/api/version", get(version::get_version));
+
+    // Debug-only. Returns raw authenticated HTML, so it stays opt-in.
+    if state.config.raw_html_debug {
+        tracing::warn!(
+            "DEBUG_RAW_HTML is enabled: /api/debug/raw serves raw SEGA responses containing personal data"
         );
+        api_routes = api_routes.route("/api/debug/raw", get(debug::get_raw_html));
+    }
+
+    let api_routes = api_routes.layer(
+        TraceLayer::new_for_http()
+            .make_span_with(DefaultMakeSpan::new().level(tracing::Level::INFO))
+            .on_response(
+                DefaultOnResponse::new()
+                    .level(tracing::Level::INFO)
+                    .latency_unit(LatencyUnit::Millis),
+            ),
+    );
 
     Router::new()
         .route("/health", get(health::health))
