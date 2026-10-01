@@ -92,6 +92,7 @@ pub(crate) async fn sync_recent_if_play_count_changed(
         pool,
         &resolved.score_updates,
         &resolved.entries,
+        &resolved.playlog_details,
         player_data,
         now,
     )
@@ -111,6 +112,8 @@ pub(crate) async fn sync_recent_if_play_count_changed(
 struct ResolvedRecentSync {
     entries: Vec<ParsedPlayRecord>,
     score_updates: Vec<ParsedScoreEntry>,
+    /// `(played_at_unixtime, detail)` for every play whose detail page we fetched.
+    playlog_details: Vec<(i64, models::ParsedPlaylogDetail)>,
     failed_targets: usize,
 }
 
@@ -159,6 +162,7 @@ async fn resolve_recent_entries_and_collect_score_updates(
     let mut detail_cache = SongDetailCache::default();
     let mut resolved_entries = Vec::with_capacity(entries.len());
     let mut songs_to_refresh = HashMap::new();
+    let mut playlog_details = Vec::new();
     let mut failed_targets = 0;
 
     for entry in entries {
@@ -202,6 +206,12 @@ async fn resolve_recent_entries_and_collect_score_updates(
             continue;
         }
 
+        // Captured before the song-detail fetch so judgements survive even when
+        // genre/artist resolution fails for this entry.
+        if let Some(played_at_unixtime) = entry.played_at_unixtime {
+            playlog_details.push((played_at_unixtime, playlog_detail.clone()));
+        }
+
         let detail =
             match fetch_song_detail_for_recent_entry(source, &mut detail_cache, &playlog_detail)
                 .await
@@ -237,6 +247,7 @@ async fn resolve_recent_entries_and_collect_score_updates(
     ResolvedRecentSync {
         entries: resolved_entries,
         score_updates: updates,
+        playlog_details,
         failed_targets,
     }
 }
@@ -481,6 +492,7 @@ mod tests {
                 dx_score: Some(900),
                 dx_score_max: Some(1000),
             }],
+            &[],
             &ParsedPlayerProfile {
                 user_name: "fixture-user".to_string(),
                 rating: 10_000,

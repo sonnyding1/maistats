@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::str::FromStr;
 
 use eyre::WrapErr;
@@ -9,7 +10,9 @@ use crate::tasks::utils::player::{
     STATE_KEY_CURRENT_VERSION_PLAY_COUNT, STATE_KEY_RATING, STATE_KEY_TOTAL_PLAY_COUNT,
     STATE_KEY_USER_NAME,
 };
-use models::{ChartType, ParsedPlayRecord, ParsedPlayerProfile, ParsedScoreEntry};
+use models::{
+    ChartType, ParsedPlayRecord, ParsedPlayerProfile, ParsedPlaylogDetail, ParsedScoreEntry,
+};
 
 pub type SqlitePool = Pool<Sqlite>;
 
@@ -80,6 +83,7 @@ pub(crate) async fn apply_recent_sync_atomic(
     pool: &SqlitePool,
     score_updates: &[ParsedScoreEntry],
     playlogs: &[ParsedPlayRecord],
+    playlog_details: &[(i64, ParsedPlaylogDetail)],
     player_data: &ParsedPlayerProfile,
     updated_at: i64,
 ) -> eyre::Result<()> {
@@ -96,11 +100,92 @@ pub(crate) async fn apply_recent_sync_atomic(
         insert_playlog(&mut tx, played_at_unixtime, entry).await?;
     }
 
+    // Detail rows only exist for plays we just observed; the update is a no-op
+    // for any play that is not (yet) in the playlogs table.
+    let playlog_idx_by_unixtime: HashMap<i64, &str> = playlogs
+        .iter()
+        .filter_map(|entry| {
+            Some((
+                entry.played_at_unixtime?,
+                entry.playlog_detail_idx.as_deref()?,
+            ))
+        })
+        .collect();
+
+    for (played_at_unixtime, detail) in playlog_details {
+        let playlog_idx = playlog_idx_by_unixtime.get(played_at_unixtime).copied();
+        store_playlog_detail_in_tx(&mut tx, *played_at_unixtime, detail, playlog_idx).await?;
+    }
+
     upsert_player_profile_snapshot_in_tx(&mut tx, player_data, updated_at)
         .await
         .wrap_err("store player profile snapshot")?;
 
     tx.commit().await.wrap_err("commit transaction")?;
+    Ok(())
+}
+
+/// Persists the extra fields scraped from `record/playlogDetail/`: fast/late
+/// counters, max combo and note count, rating movement, and the per-note-type
+/// judgement breakdown.
+async fn store_playlog_detail_in_tx(
+    tx: &mut sqlx::Transaction<'_, Sqlite>,
+    played_at_unixtime: i64,
+    detail: &ParsedPlaylogDetail,
+    playlog_detail_idx: Option<&str>,
+) -> eyre::Result<()> {
+    sqlx::query(
+        r#"
+UPDATE playlogs SET
+  playlog_detail_idx = ?2,
+  fast_count = ?3,
+  late_count = ?4,
+  max_combo = ?5,
+  note_count = ?6,
+  rating_after = ?7,
+  rating_delta = ?8
+WHERE played_at_unixtime = ?1
+"#,
+    )
+    .bind(played_at_unixtime)
+    .bind(playlog_detail_idx)
+    .bind(detail.fast_count.map(i64::from))
+    .bind(detail.late_count.map(i64::from))
+    .bind(detail.max_combo.map(i64::from))
+    .bind(detail.note_count.map(i64::from))
+    .bind(detail.rating_after.map(i64::from))
+    .bind(detail.rating_delta.map(i64::from))
+    .execute(&mut **tx)
+    .await
+    .wrap_err("update playlog detail")?;
+
+    for judgement in &detail.judgements {
+        sqlx::query(
+            r#"
+INSERT INTO playlog_judgements (
+  played_at_unixtime, note_type,
+  critical_perfect, perfect, great, good, miss
+) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+ON CONFLICT(played_at_unixtime, note_type) DO UPDATE SET
+  critical_perfect = excluded.critical_perfect,
+  perfect = excluded.perfect,
+  great = excluded.great,
+  good = excluded.good,
+  miss = excluded.miss
+"#,
+        )
+        .bind(played_at_unixtime)
+        .bind(judgement.note_type.as_str())
+        .bind(i64::from(judgement.critical_perfect))
+        .bind(i64::from(judgement.perfect))
+        .bind(i64::from(judgement.great))
+        .bind(i64::from(judgement.good))
+        .bind(i64::from(judgement.miss))
+        .execute(&mut **tx)
+        .await
+        .wrap_err("upsert playlog judgement")?;
+    }
+
     Ok(())
 }
 

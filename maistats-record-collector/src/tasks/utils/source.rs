@@ -22,6 +22,7 @@ pub enum ExpectedPage {
     ScoresList { diff: u8 },
     PlaylogDetail { idx: String },
     MusicDetail { idx: String },
+    Raw { path: String },
 }
 
 pub trait CollectorSource {
@@ -156,6 +157,7 @@ impl FixtureCollectorSource {
         Some(ParsedPlaylogDetail {
             title: recent_title,
             music_detail_idx: music_detail_idx.to_string(),
+            ..ParsedPlaylogDetail::default()
         })
     }
 }

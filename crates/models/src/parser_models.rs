@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{ChartType, DifficultyCategory, FcStatus, ScoreRank, SyncStatus};
+use crate::{ChartType, DifficultyCategory, FcStatus, NoteType, ScoreRank, SyncStatus};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParsedScoreEntry {
@@ -97,10 +97,54 @@ pub struct ParsedSongDetail {
     pub difficulties: Vec<ParsedSongChartDetail>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ParsedPlaylogDetail {
     pub title: String,
     pub music_detail_idx: String,
+    /// Notes tapped early, from the "FAST" counter on the detail page.
+    #[serde(default)]
+    pub fast_count: Option<u32>,
+    /// Notes tapped late, from the "LATE" counter on the detail page.
+    #[serde(default)]
+    pub late_count: Option<u32>,
+    #[serde(default)]
+    pub max_combo: Option<u32>,
+    /// Total notes in the chart, from the max-combo denominator.
+    #[serde(default)]
+    pub note_count: Option<u32>,
+    #[serde(default)]
+    pub rating_after: Option<u32>,
+    #[serde(default)]
+    pub rating_delta: Option<i32>,
+    /// One row per note type. Empty when the page has no judgement table
+    /// (for example a play that ended before any notes were judged).
+    #[serde(default)]
+    pub judgements: Vec<ParsedNoteJudgement>,
+}
+
+impl ParsedPlaylogDetail {
+    /// Sum of every judgement across every note type. Equals the chart's note
+    /// count when the judgement table is complete.
+    pub fn judged_note_total(&self) -> u32 {
+        self.judgements.iter().map(ParsedNoteJudgement::total).sum()
+    }
+}
+
+/// One row of the playlog judgement table: a note type and its five counts.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ParsedNoteJudgement {
+    pub note_type: NoteType,
+    pub critical_perfect: u32,
+    pub perfect: u32,
+    pub great: u32,
+    pub good: u32,
+    pub miss: u32,
+}
+
+impl ParsedNoteJudgement {
+    pub const fn total(&self) -> u32 {
+        self.critical_perfect + self.perfect + self.great + self.good + self.miss
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

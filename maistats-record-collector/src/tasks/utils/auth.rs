@@ -75,5 +75,6 @@ fn expected_page_label(expected_page: &ExpectedPage) -> String {
         ExpectedPage::ScoresList { diff } => format!("scores list page (diff={diff})"),
         ExpectedPage::PlaylogDetail { idx } => format!("playlogDetail page (idx={idx})"),
         ExpectedPage::MusicDetail { idx } => format!("musicDetail page (idx={idx})"),
+        ExpectedPage::Raw { path } => format!("raw page (path={path})"),
     }
 }

@@ -655,6 +655,48 @@ impl<'de> Deserialize<'de> for ScoreRank {
     }
 }
 
+/// Note type row label from the playlog judgement table (`record/playlogDetail/`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum NoteType {
+    #[serde(rename = "TAP")]
+    Tap,
+    #[serde(rename = "HOLD")]
+    Hold,
+    #[serde(rename = "SLIDE")]
+    Slide,
+    #[serde(rename = "TOUCH")]
+    Touch,
+    #[serde(rename = "BREAK")]
+    Break,
+}
+
+impl NoteType {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Tap => "TAP",
+            Self::Hold => "HOLD",
+            Self::Slide => "SLIDE",
+            Self::Touch => "TOUCH",
+            Self::Break => "BREAK",
+        }
+    }
+}
+
+impl std::str::FromStr for NoteType {
+    type Err = ();
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value.trim().to_ascii_uppercase().as_str() {
+            "TAP" => Ok(Self::Tap),
+            "HOLD" => Ok(Self::Hold),
+            "SLIDE" => Ok(Self::Slide),
+            "TOUCH" => Ok(Self::Touch),
+            "BREAK" => Ok(Self::Break),
+            _ => Err(()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Display)]
 pub enum FcStatus {
     #[serde(rename = "AP+")]
