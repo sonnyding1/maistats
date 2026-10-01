@@ -1301,6 +1301,14 @@ select:focus-visible {
   min-width: 0;
 }
 
+/* Narrow tiles cannot fit the FC/sync chips without overflowing; drop them
+   rather than wrapping the row and making every tile a different height. */
+@media (max-width: 740px) {
+  .rating-song-tile-flag {
+    display: none;
+  }
+}
+
 .rating-song-tile-footer .rating-difficulty-chip {
   display: inline-flex;
   align-items: center;
@@ -1492,6 +1500,7 @@ select:focus-visible {
   border-radius: 2px;
   background: var(--bg);
 }
+
 
 .user-tier-layout {
   align-items: start;
