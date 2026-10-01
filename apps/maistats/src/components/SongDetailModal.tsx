@@ -45,8 +45,7 @@ export function SongDetailModal({
   );
 
   const imageName = selectedDetailRows[0]?.imageName ?? null;
-  const englishAliases = aliasValues(selectedDetailAliases, 'en');
-  const koreanAliases = aliasValues(selectedDetailAliases, 'ko');
+  const englishAliases = aliasValues(selectedDetailAliases);
   const canRefresh =
     recordCollectorUrl.trim().length > 0 &&
     selectedDetailGenre !== null &&
@@ -177,9 +176,6 @@ export function SongDetailModal({
                 ) : null}
                 {englishAliases.length > 0 ? (
                   <div className="muted detail-aliases">EN: {englishAliases.join(', ')}</div>
-                ) : null}
-                {koreanAliases.length > 0 ? (
-                  <div className="muted detail-aliases">KO: {koreanAliases.join(', ')}</div>
                 ) : null}
               </div>
             </div>

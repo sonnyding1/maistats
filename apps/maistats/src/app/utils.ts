@@ -106,8 +106,8 @@ export function formatVersionLabel(value: string | null | undefined): string {
   return value.replace(/^maimaiでらっくす/, 'DX');
 }
 
-export function aliasValues(aliases: SongAliases | null | undefined, language: 'en' | 'ko'): string[] {
-  const values = aliases?.[language];
+export function aliasValues(aliases: SongAliases | null | undefined): string[] {
+  const values = aliases?.en;
   return Array.isArray(values) ? values : [];
 }
 
@@ -122,10 +122,9 @@ function formatAliasGroup(label: string, aliases: string[]): string | null {
 }
 
 export function formatAliasSummary(aliases: SongAliases | null | undefined): string | null {
-  const groups = [
-    formatAliasGroup('EN', aliasValues(aliases, 'en')),
-    formatAliasGroup('KO', aliasValues(aliases, 'ko')),
-  ].filter((value): value is string => value !== null);
+  const groups = [formatAliasGroup('EN', aliasValues(aliases))].filter(
+    (value): value is string => value !== null,
+  );
 
   if (groups.length === 0) {
     return null;

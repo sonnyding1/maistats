@@ -134,7 +134,6 @@ export interface SongChartRegion {
 
 export interface SongAliases {
   en?: string[];
-  ko?: string[];
 }
 
 export interface SongSheetResponse {

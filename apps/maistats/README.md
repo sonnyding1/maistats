@@ -1,69 +1,69 @@
 # maistats
 
-정적 song database와 `maistats-record-collector` 데이터를 탐색하는 Vite + React 기반 웹 프론트엔드입니다.
+基于 Vite + React 的 Web 前端，用于浏览静态 song database 与 `maistats-record-collector` 的数据。
 
 ## Requirements
 
-- Node.js 20+ (권장: 20 LTS 이상)
+- Node.js 20+（建议 20 LTS 或更高）
 - npm 10+
 
 ## What It Does
 
-- 점수 목록과 플레이 로그 탐색
-- 곡명, 차트 타입, 난이도, 버전, 랭크, FC, SYNC 기준 필터링
-- 달성률, 내부 레벨, 경과일 기준 정렬 및 범위 검색
-- 곡별 상세 조회와 chart별 `play_count` 확인
-- 배포 환경 변수와 브라우저 UI 설정을 통한 API origin 전환
+- 浏览分数列表与游玩记录
+- 按曲名、谱面类型、难度、版本、评级、FC、SYNC 筛选
+- 按达成率、定数、间隔天数排序及范围搜索
+- 查看单曲详情与每个谱面的 `play_count`
+- 通过部署环境变量与浏览器内的界面设置切换 API origin
 
 ## Quick Start
 
-이 앱은 monorepo의 npm workspace 멤버입니다. 아래 명령은 저장소 루트에서 실행하는 기준입니다.
+本应用是 monorepo 中的 npm workspace 成员。以下命令均在仓库根目录执行。
 
-1. 의존성 설치:
+1. 安装依赖：
 
 ```bash
 npm ci
 ```
 
-2. 환경 변수 파일 생성:
+2. 创建环境变量文件：
 
 ```bash
 cp apps/maistats/.env.example apps/maistats/.env
 ```
 
-3. 필요하면 `.env` 값을 수정:
+3. 如有需要，修改 `.env`：
 
 ```env
 SONG_DATABASE_URL=https://maimai-charts.muhwan.dev
 RECORD_COLLECTOR_SERVER_URL=<your-record-collector-server-origin>
 ```
 
-로컬 기본값은 [.env.example](./.env.example)에 들어 있습니다.
+本地默认值见 [.env.example](./.env.example)。
 
-4. 개발 서버 실행:
+4. 启动开发服务器：
 
 ```bash
 npm run dev --workspace apps/maistats
 ```
 
-접속 가능한 로컬 주소는 Vite가 터미널에 출력합니다.
+可访问的本地地址由 Vite 输出到终端。
 
 ## Environment Variables
 
 - `SONG_DATABASE_URL`
-  - static song database base URL
+  - 静态 song database 的基础 URL
 - `RECORD_COLLECTOR_SERVER_URL`
-  - `maistats-record-collector` origin
+  - `maistats-record-collector` 的 origin
 
-이 값들은 앱의 기본 API 연결 주소로 사용됩니다. 실행 중에는 UI의 `Server Connection`에서 브라우저별로 덮어쓸 수 있습니다.
+这些值会作为应用默认的 API 连接地址。运行期间可在界面的 `Server Connection` 中按浏览器覆盖。
 
-Cloudflare Pages에 배포할 때는 이 값을 저장소에 커밋하지 말고 Pages 환경 변수로 설정하세요.
+部署到 Cloudflare Pages 时，请勿把这些值提交到仓库，而应配置为 Pages 的环境变量。
 
 ## Scripts
 
-- `npm run dev --workspace apps/maistats`: 개발 서버 실행
-- `npm run build --workspace apps/maistats`: TypeScript 체크 후 프로덕션 빌드 생성
-- `npm run preview --workspace apps/maistats`: 빌드 결과 로컬 프리뷰
+- `npm run dev --workspace apps/maistats`：启动开发服务器
+- `npm run build --workspace apps/maistats`：先做 TypeScript 检查，再生成生产构建
+- `npm run preview --workspace apps/maistats`：在本地预览构建结果
 
 ## Build
 
@@ -71,46 +71,46 @@ Cloudflare Pages에 배포할 때는 이 값을 저장소에 커밋하지 말고
 npm run build --workspace apps/maistats
 ```
 
-빌드 결과물은 `dist/`에 생성됩니다.
+构建产物生成在 `dist/`。
 
-프리뷰가 필요하면 다음을 실행합니다.
+如需预览：
 
 ```bash
 npm run preview --workspace apps/maistats
 ```
 
-프리뷰 주소는 Vite가 터미널에 출력합니다.
+预览地址由 Vite 输出到终端。
 
 ## Deploying With Cloudflare Pages
 
-권장 배포 대상은 Cloudflare Pages입니다.
+推荐的部署目标是 Cloudflare Pages。
 
-기본 설정:
+默认配置：
 
-- GitHub 저장소 연결
-- Production branch: `main`
-- Framework preset: `Vite` 또는 `None`
-- Build command: `npm ci && npm run build --workspace apps/maistats`
-- Build output directory: `apps/maistats/dist`
-- Root directory: 저장소 루트
+- 关联 GitHub 仓库
+- Production branch：`main`
+- Framework preset：`Vite` 或 `None`
+- Build command：`npm ci && npm run build --workspace apps/maistats`
+- Build output directory：`apps/maistats/dist`
+- Root directory：仓库根目录
 - `NODE_VERSION=20`
-- Deploy command: `npx wrangler deploy --config apps/maistats/wrangler.jsonc`
+- Deploy command：`npx wrangler deploy --config apps/maistats/wrangler.jsonc`
 
-환경 변수:
+环境变量：
 
-- Production과 Preview 모두에 `SONG_DATABASE_URL`, `RECORD_COLLECTOR_SERVER_URL` 설정
-- 필요하면 custom domain 연결
+- 在 Production 与 Preview 中都设置 `SONG_DATABASE_URL`、`RECORD_COLLECTOR_SERVER_URL`
+- 如有需要，绑定自定义域名
 
-이 저장소는 `@cloudflare/vite-plugin`과 `wrangler.jsonc`를 포함하므로 루트에서 `npx wrangler deploy --config apps/maistats/wrangler.jsonc` 형태의 배포도 지원합니다.
+本仓库包含 `@cloudflare/vite-plugin` 与 `wrangler.jsonc`，因此也支持在根目录执行 `npx wrangler deploy --config apps/maistats/wrangler.jsonc` 进行部署。
 
-운영 방식:
+运行方式：
 
-- `main` push 시 production 배포
-- PR 생성/업데이트 시 preview 배포
+- 推送到 `main` 时部署 production
+- 创建或更新 PR 时部署 preview
 
 ## Data Notes
 
-- Score 화면의 Last Played/Days는 `maistats-record-collector`의 `/api/scores/rated` (`scores` 테이블 `last_played_at`) 기준입니다.
-- Playlog 화면은 `maistats-record-collector`의 `/api/recent?limit=10000` (`playlogs` 테이블) 기준입니다.
-- chart별 `play_count`는 playlog에서 추정하지 않고, `maistats-record-collector` score API가 내려주는 값을 직접 사용합니다.
-- 더 긴 기간 분석이 필요하면 record collector에 추가 API(예: 전체 playlog 조회)가 필요합니다.
+- Score 页面的 Last Played/Days 来自 `maistats-record-collector` 的 `/api/scores/rated`（`scores` 表的 `last_played_at`）。
+- Playlog 页面来自 `maistats-record-collector` 的 `/api/recent?limit=10000`（`playlogs` 表）。
+- 每个谱面的 `play_count` 不由 playlog 推算，而是直接使用 `maistats-record-collector` score API 返回的值。
+- 如需更长时间跨度的分析，需要在 record collector 中新增 API（例如查询全部 playlog）。

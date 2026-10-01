@@ -160,8 +160,7 @@ export function ScoreHistoryModal({
   const effectiveTheme = useEffectiveTheme();
   const plotTheme = effectiveTheme === 'light' ? LIGHT_HISTORY_THEME : DARK_HISTORY_THEME;
   const shouldShowLoadingState = isLoading && historyPoints.length === 0;
-  const englishAliases = selectedHistoryRow ? aliasValues(selectedHistoryRow.aliases, 'en') : [];
-  const koreanAliases = selectedHistoryRow ? aliasValues(selectedHistoryRow.aliases, 'ko') : [];
+  const englishAliases = selectedHistoryRow ? aliasValues(selectedHistoryRow.aliases) : [];
   const lastPlayedLabel = selectedHistoryRow
     ? selectedHistoryRow.latestPlayedAtLabel
       ?? toDateLabel(selectedHistoryRow.latestPlayedAtUnix, locale)
@@ -342,9 +341,6 @@ export function ScoreHistoryModal({
                 ) : null}
                 {englishAliases.length > 0 ? (
                   <div className="muted detail-aliases">EN: {englishAliases.join(', ')}</div>
-                ) : null}
-                {koreanAliases.length > 0 ? (
-                  <div className="muted detail-aliases">KO: {koreanAliases.join(', ')}</div>
                 ) : null}
                 <div className="history-meta-grid">
                   <HistoryMetaItem label={t('common.lastPlayed')} value={lastPlayedLabel} />

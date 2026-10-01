@@ -16,7 +16,7 @@ import { chartIdentityKey, songIdentityKey } from './songIdentity';
 import { CHART_TYPES, DIFFICULTIES } from './app/constants';
 import { daysSince, parseMaimaiPlayedAtToUnix } from './app/maimaiTime';
 
-const EMPTY_ALIASES: SongAliases = { en: [], ko: [] };
+const EMPTY_ALIASES: SongAliases = { en: [] };
 
 export function chartKey(
   title: string,
