@@ -13,13 +13,8 @@ const ENV_RECORD_COLLECTOR_URL =
 
 export const DEFAULT_SONG_DATABASE_URL =
   ENV_SONG_DATABASE_URL || 'https://maimai-charts.muhwan.dev';
-// With nothing configured we target the page's own origin. nginx proxies
-// /api and /health/ready through to the collector, so any device that can load
-// the page (a phone over Tailscale, for instance) reaches the API with no extra
-// configuration. Set RECORD_COLLECTOR_SERVER_URL to override.
 export const DEFAULT_RECORD_COLLECTOR_URL =
-  ENV_RECORD_COLLECTOR_URL ||
-  (typeof window === 'undefined' ? '' : window.location.origin);
+  ENV_RECORD_COLLECTOR_URL || 'http://localhost:3000';
 
 export const CHART_TYPES: ChartType[] = ['STD', 'DX'];
 export const DIFFICULTIES: DifficultyCategory[] = [
