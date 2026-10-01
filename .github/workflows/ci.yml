@@ -8,7 +8,6 @@ on:
       - Cargo.lock
       - rust-toolchain.toml
       - crates/**
-      - maistats-discord-bot/**
       - maistats-record-collector/**
       - maistats-song-info/**
       - tests/**
@@ -20,7 +19,6 @@ on:
       - Cargo.lock
       - rust-toolchain.toml
       - crates/**
-      - maistats-discord-bot/**
       - maistats-record-collector/**
       - maistats-song-info/**
       - tests/**
@@ -62,7 +60,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Run clippy
-        run: cargo clippy --all -- -D warnings
+        run: cargo clippy --workspace --exclude maistats-discord-bot -- -D warnings
 
   test:
     name: Test
@@ -79,4 +77,4 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Run tests
-        run: cargo test
+        run: cargo test --workspace --exclude maistats-discord-bot

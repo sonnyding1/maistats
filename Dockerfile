@@ -1,8 +1,7 @@
-# Multi-stage build for maimai-bot workspace
-# Builds the record collector and Discord bot from a single builder stage
+# Multi-stage build for the maistats record collector
 
 # ============================================
-# Builder Stage - Compiles entire workspace
+# Builder Stage - Compiles the record collector
 # ============================================
 # rust:1.93-slim currently tracks Debian trixie; keep runtime stages on the same
 # distro family/release so the Rust binaries and container libc stay aligned.
@@ -21,11 +20,13 @@ COPY Cargo.toml ./
 COPY Cargo.lock ./
 COPY crates/ ./crates/
 COPY maistats-record-collector/ ./maistats-record-collector/
-COPY maistats-song-info/ ./maistats-song-info/
+# Copied so the workspace manifest resolves; only the collector is compiled.
 COPY maistats-discord-bot/ ./maistats-discord-bot/
+COPY maistats-song-info/ ./maistats-song-info/
 
-# Build entire workspace
-RUN cargo build --release
+# Build only the record collector. The Discord bot and its heavy render
+# dependencies (image, imageproc, nalgebra, poise) are deliberately skipped.
+RUN cargo build --release -p maistats-record-collector
 
 # ============================================
 # Target: maistats-record-collector
@@ -52,57 +53,3 @@ EXPOSE 3000
 
 CMD ["maistats-record-collector"]
 
-# ============================================
-# Target: maistats-discord-bot
-# ============================================
-FROM debian:trixie-slim AS maistats-discord-bot
-
-ARG DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    curl \
-    libssl3 \
-    python3 \
-    chromium \
-    # kaleido / Chromium system dependencies
-    libnss3 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libcairo2 \
-    libdrm2 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libxkbcommon0 \
-    libasound2 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    fonts-dejavu-core \
-    fonts-inter \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-
-ENV PATH="/root/.local/bin:$PATH"
-ENV UV_PYTHON_PREFERENCE=only-system
-ENV BROWSER_PATH=/usr/bin/chromium
-
-WORKDIR /app
-
-# Copy discord binary
-COPY --from=builder /app/target/release/maistats-discord-bot /usr/local/bin/maistats-discord-bot
-
-# Copy the plot script and the rank icons it loads from
-# maistats-discord-bot/assets/status-emojis/ at runtime.
-COPY scripts/ ./scripts/
-COPY maistats-discord-bot/assets/status-emojis/ ./maistats-discord-bot/assets/status-emojis/
-
-# Validate the script end-to-end during image build with a minimal payload.
-RUN printf '%s' '{"points":[{"achievement":100.0,"level_tenths":130}],"x_min":97.0}' | \
-    uv run --script scripts/mai_plot.py > /dev/null
-
-CMD ["maistats-discord-bot"]
