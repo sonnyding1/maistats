@@ -1269,6 +1269,7 @@ select:focus-visible {
   align-items: center;
   gap: 5px;
   min-width: 0;
+  overflow: hidden;
   color: var(--ink-dim);
   font-size: 0.68rem;
   font-weight: 700;
@@ -1299,6 +1300,7 @@ select:focus-visible {
   align-items: center;
   gap: 5px;
   min-width: 0;
+  overflow: hidden;
 }
 
 /* Narrow tiles cannot fit the FC/sync chips without overflowing; drop them

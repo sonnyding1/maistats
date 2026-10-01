@@ -97,26 +97,47 @@ export function RatingPage({
   const seasonLabel = seasonVersion ? formatVersionLabel(seasonVersion) : null;
   const todayLabel = new Date().toLocaleDateString(locale);
 
-  // html-to-image walks the DOM and inlines styles/images. Jackets come from the
-  // public song database, which sends `access-control-allow-origin: *`, so the
-  // canvas is not tainted and the PNG can be read back.
+  // Draws the poster on a canvas rather than rasterising the DOM: the output is
+  // a fixed 1728px / five-column image on every device, and it sidesteps the
+  // html-to-image SVG pipeline, which failed outright on tall content.
   const renderPng = useCallback(async () => {
-    const node = exportRef.current;
-    if (!node) throw new Error('Nothing to export');
-
-    const { toBlob } = await import('html-to-image');
-    const background =
-      getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#ffffff';
-    // No `cacheBust`: appending a query string to the cover URLs made the song
-    // database fail those requests, so html-to-image silently dropped most
-    // jackets (export dropped from ~1.3 MB to ~130 KB).
-    const blob = await toBlob(node, {
-      pixelRatio: 2,
-      backgroundColor: background,
+    const { renderB50Png } = await import('../b50Canvas');
+    return renderB50Png({
+      oldRows,
+      newRows,
+      playerProfile,
+      seasonLabel,
+      oldRatingTotal,
+      newRatingTotal,
+      oldSummary,
+      newSummary,
+      average: combinedAverage,
+      locale,
+      songInfoUrl,
+      labels: {
+        oldTitle: t('rating.oldTop35'),
+        newTitle: t('rating.newTop15'),
+        currentRating: t('rating.current'),
+        version: t('rating.version'),
+        playsVersion: t('rating.playCountVersion'),
+        playsAllTime: t('rating.playCountTotal'),
+        date: t('rating.date'),
+      },
     });
-    if (!blob) throw new Error('Render produced no image');
-    return blob;
-  }, []);
+  }, [
+    combinedAverage,
+    locale,
+    newRatingTotal,
+    newRows,
+    newSummary,
+    oldRatingTotal,
+    oldRows,
+    oldSummary,
+    playerProfile,
+    seasonLabel,
+    songInfoUrl,
+    t,
+  ]);
 
   const handleSaveImage = useCallback(async () => {
     setExportState('working');
