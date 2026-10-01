@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Discord-bot-ready Raveille chart tiers using Lomo's tier mapping."""
+"""Build Raveille chart tiers using Lomo's tier mapping."""
 
 from __future__ import annotations
 

@@ -10,16 +10,13 @@ constraints, and validation. Human-facing overview belongs in `README.md`.
 
 - `maistats-record-collector`: a per-user, self-hosted Rust/Axum service that
   logs in to `maimaidx-eng.com`, stores personal records in SQLite, and exposes
-  HTTP APIs for the frontend and Discord bot.
+  HTTP APIs for the frontend.
 - `maistats-song-info`: a Rust generator for shared static song metadata,
   internal levels, aliases, and jacket assets.
-- `maistats-discord-bot`: a shared Rust/poise Discord bot. Each Discord user
-  registers one collector URL; the bot keeps only that mapping and bot-local
-  state.
 - `apps/maistats`: a Vite + React frontend that reads shared song metadata and
   connects to a user-provided record collector URL.
-- `crates/`: shared Rust crates for auth, maimai HTTP clients/parsers, and
-  shared API/domain/storage models.
+- `crates/`: shared Rust crates for auth, maimai HTML parsers, and shared
+  API/domain/storage models.
 
 ## Non-Negotiables
 
@@ -45,7 +42,6 @@ constraints, and validation. Human-facing overview belongs in `README.md`.
   - `cp apps/maistats/.env.example apps/maistats/.env`
 - Generate the song database: `cargo run -p maistats-song-info`
 - Run the record collector: `cargo run -p maistats-record-collector`
-- Run the Discord bot: `cargo run -p maistats-discord-bot`
 - Run the frontend dev server from the root workspace:
   `npm run dev:maistats`
 - Fetch an authenticated page for parser fixture/debug work:
@@ -57,8 +53,8 @@ Run the narrowest useful checks while iterating, then broaden before handing off
 or committing.
 
 - Rust format: `cargo fmt --all -- --check`
-- Rust lint: `cargo clippy --all -- -D warnings`
-- Rust tests: `cargo test`
+- Rust lint: `cargo clippy --workspace -- -D warnings`
+- Rust tests: `cargo test --workspace`
 - Frontend build/typecheck: `npm run build:maistats`
 - Frontend tests: `npm run test:maistats`
 
@@ -66,8 +62,8 @@ Before committing Rust changes, run:
 
 ```bash
 cargo fmt --all
-cargo clippy --all -- -D warnings
-cargo test
+cargo clippy --workspace -- -D warnings
+cargo test --workspace
 ```
 
 Before committing frontend changes, run at least:
@@ -87,7 +83,7 @@ npm run test:maistats
   their existing helpers.
 - Use structured parsers/APIs where available. Avoid fragile string slicing for
   HTML, JSON, SQL, or TOML when a local helper or crate already exists.
-- Preserve existing async/runtime patterns: `tokio`, `axum`, `sqlx`, `poise`,
+- Preserve existing async/runtime patterns: `tokio`, `axum`, `sqlx`,
   `reqwest`, and `tracing`.
 - Keep comments sparse and useful. Explain non-obvious maimai-specific behavior,
   not routine assignments.
@@ -95,7 +91,6 @@ npm run test:maistats
 ## Data And Migrations
 
 - Record collector migrations live in `maistats-record-collector/migrations/`.
-- Discord bot migrations live in `maistats-discord-bot/migrations/`.
 - Migrations are embedded with `sqlx::migrate!()` and run at service startup.
 - SQLite data is local runtime state. Do not add migrations that assume shared
   multi-user collector storage.
@@ -125,12 +120,8 @@ npm run test:maistats
 
 ## Versioning
 
-- The workspace version is in `[workspace.package]` in `Cargo.toml`.
-- If bumping that version, add a matching entry to the `CHANGELOG` constant in
-  `maistats-discord-bot/src/commands.rs`:
-  `("x.y.z", "one-line English description of what changed")`.
-- Keep changelog entries user-facing because the Discord bot shows them when a
-  registered record collector is out of date.
+- The workspace version is in `[workspace.package]` in `Cargo.toml`. The running
+  collector reports it from `GET /api/version`.
 
 ## Commit And PR Rules
 
@@ -138,7 +129,7 @@ npm run test:maistats
   `<type>(<scope>): <summary>`
 - Preferred types: `feat`, `fix`, `refactor`, `docs`, `test`, `ci`, `chore`.
 - Use scopes that match repository components, for example `record-collector`,
-  `discord`, `song-info`, `models`, `maimai-parsers`, `maistats`, or `agents`.
+  `song-info`, `models`, `maimai-parsers`, `maistats`, or `agents`.
 - Keep commits atomic. Do not bundle unrelated fixes.
 - Every commit message must include a standalone co-author trailer in the body:
   `Co-authored-by: <Agent Model Name> <noreply@openai.com>`

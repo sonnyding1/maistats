@@ -21,11 +21,9 @@ COPY Cargo.lock ./
 COPY crates/ ./crates/
 COPY maistats-record-collector/ ./maistats-record-collector/
 # Copied so the workspace manifest resolves; only the collector is compiled.
-COPY maistats-discord-bot/ ./maistats-discord-bot/
 COPY maistats-song-info/ ./maistats-song-info/
 
-# Build only the record collector. The Discord bot and its heavy render
-# dependencies (image, imageproc, nalgebra, poise) are deliberately skipped.
+# Build only the record collector.
 RUN cargo build --release -p maistats-record-collector
 
 # ============================================

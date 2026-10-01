@@ -3,10 +3,8 @@ members = [
     "maistats-record-collector",
     "maistats-song-info",
     "crates/maimai-auth",
-    "crates/maimai-client",
     "crates/maimai-parsers",
     "crates/models",
-    "maistats-discord-bot",
 ]
 resolver = "2"
 
@@ -22,8 +20,6 @@ cookie_store = { version = "0.22.0", features = ["serde_json"] }
 dotenvy = "0.15.7"
 eyre = "0.6.12"
 hex = "0.4.3"
-ordered-float = "5.1.0"
-poise = "0.6.1"
 rand = "0.8.5"
 reqwest = { version = "0.12.28", features = ["cookies", "gzip", "brotli", "deflate", "json"] }
 reqwest_cookie_store = { version = "0.9.0", features = ["serde"] }
@@ -33,11 +29,9 @@ serde_json = "1.0.149"
 
 sha2 = "0.10.9"
 sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "sqlite", "migrate"] }
-strsim = "0.11.1"
 strum = { version = "0.27.2", features = ["derive"] }
 time = { version = "0.3.45", features = ["local-offset"] }
 tokio = { version = "1.49.0", features = ["rt-multi-thread", "macros", "signal", "process"] }
 tower-http = { version = "0.6.8", features = ["trace", "cors"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
-urlencoding = "2.1.3"

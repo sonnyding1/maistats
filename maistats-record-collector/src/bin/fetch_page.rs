@@ -32,8 +32,6 @@ async fn main() -> eyre::Result<()> {
         sega_password,
         data_dir,
         cookie_path,
-        discord_bot_token: None,
-        discord_user_id: None,
     };
 
     let mut client = MaimaiClient::new(&app_config).wrap_err("create maimai client")?;

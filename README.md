@@ -10,20 +10,16 @@ collector.
 - `maistats-song-info` builds the shared song database: titles, aliases,
   chart metadata, internal levels, and jacket assets.
 - `maistats-record-collector` is the per-user service. It logs in with one SEGA
-  ID, stores records in local SQLite, and exposes APIs used by the web app and
-  Discord bot.
-- `maistats-discord-bot` is a shared Discord bot. Users register their own
-  collector URL with the bot, and the bot reads only from that collector.
+  ID, stores records in local SQLite, and exposes APIs used by the web app.
 - `apps/maistats` is the web frontend. It reads the shared song database and
   connects to a collector URL configured by the user.
-- `crates/` contains shared Rust crates for auth, parsing, clients, and common
-  models.
+- `crates/` contains shared Rust crates for auth, parsing, and common models.
 
 The intended deployment model is:
 
-1. Shared infrastructure hosts the song database, Discord bot, and frontend.
+1. Shared infrastructure hosts the song database and frontend.
 2. Each player hosts their own record collector with their own SEGA ID.
-3. The frontend and Discord bot connect to that user's collector URL.
+3. The frontend connects to that user's collector URL.
 
 ## Repository Layout
 
@@ -32,10 +28,8 @@ The intended deployment model is:
 |-- apps/maistats/                # Vite + React frontend
 |-- maistats-record-collector/    # Self-hosted personal record API
 |-- maistats-song-info/           # Shared song database generator
-|-- maistats-discord-bot/         # Shared Discord bot
 |-- crates/
 |   |-- maimai-auth/              # maimai DX NET auth helpers
-|   |-- maimai-client/            # API clients for maistats services
 |   |-- maimai-parsers/           # HTML parsers
 |   `-- models/                   # Shared API/domain/storage models
 `-- .github/workflows/            # CI and deployment workflows
@@ -47,7 +41,6 @@ The intended deployment model is:
 - Node.js 20+
 - npm
 - A SEGA ID account for collector or song database generation
-- A Discord bot token if running the Discord bot
 
 ## Configuration
 
@@ -64,8 +57,6 @@ Important groups:
 - Song database: `SONG_DATA_PATH`
 - Song database authenticated source: `MAIMAI_INTL_SEGA_ID`,
   `MAIMAI_INTL_SEGA_PASSWORD`, `USER_AGENT`
-- Discord bot: `DISCORD_BOT_TOKEN`, `DISCORD_DEV_USER_ID`,
-  `SONG_DATABASE_URL`, `DISCORD_BOT_DATABASE_URL`
 - Song database publishing: R2 credentials and public base URL
 
 The frontend has its own template:
@@ -112,12 +103,10 @@ By default it listens on `http://localhost:3000`. Useful endpoints include:
 - `GET /api/today`
 - `GET /api/rating/targets`
 - `POST /api/poll`
-
-Run the Discord bot:
-
-```bash
-cargo run -p maistats-discord-bot
-```
+- `POST /api/playlogs/backfill` — re-fetch playlog details (judgements, combo,
+  rating movement) for stored plays still inside SEGA's recent-play window
+- `GET /api/debug/raw` — raw authenticated HTML for parser work; opt in with
+  `DEBUG_RAW_HTML=1`
 
 Run the frontend:
 
@@ -128,18 +117,34 @@ npm run dev:maistats
 The Vite dev server normally starts at `http://localhost:5174` unless that port
 is already in use.
 
+## What The Collector Stores
+
+The collector logs in as you and mirrors maimai DX NET into local SQLite:
+
+- `scores` — one row per chart ever played, with achievement, rank, FC, sync,
+  DX score, last played and play count.
+- `playlogs` — individual plays, including the extra detail scraped from
+  `record/playlogDetail/`: fast/late counters, max combo, chart note count,
+  rating after the play and rating delta.
+- `playlog_judgements` — the per-note-type judgement breakdown for a play
+  (critical perfect / perfect / great / good / miss, for tap, hold, slide, touch
+  and break).
+
+Background polling runs every 30 minutes, with `POST /api/poll` for on-demand
+syncs. Detail rows are captured as new plays are observed; older plays can be
+filled in with `POST /api/playlogs/backfill` for as long as they remain inside
+SEGA's recent-play window (the newest ~50).
+
 ## Docker
 
 Published images are available from GHCR:
 
-- `ghcr.io/minty99/maistats-record-collector:latest`
-- `ghcr.io/minty99/maistats-discord-bot:latest`
+- `ghcr.io/sonnyding1/maistats-record-collector:latest`
 
-Example compose files are included:
+An example compose file is included:
 
 ```bash
 docker compose -f compose.record_collector.yaml up -d
-docker compose -f compose.discord_bot.yaml up -d
 ```
 
 The record collector compose file stores SQLite data under `./data`.
@@ -151,17 +156,9 @@ tier views, playlogs, achievement plots, and connection settings. It can use the
 public song database while reading personal records from any compatible
 self-hosted collector.
 
-## Discord Bot Features
-
-Users connect their collector with `/register <url>`. The bot can then show
-score summaries, song metadata, recent plays, today's plays, up/down sessions,
-user-tier and maishift percentile up/down sessions, and rating plots through
-slash commands.
-
 ## Data Storage
 
 - Record collector SQLite: usually `data/maimai.sqlite3`
-- Discord bot SQLite: usually `data/maistats-discord-bot.sqlite3`
 - Song database output: usually `data/song_data/data.json` and
   `data/song_data/cover/`
 - Runtime cookies: temporary process-local files outside committed source
@@ -175,7 +172,7 @@ Rust:
 
 ```bash
 cargo fmt --all -- --check
-cargo clippy --all -- -D warnings
+cargo clippy --workspace -- -D warnings
 cargo test
 ```
 
@@ -190,7 +187,6 @@ npm run test:maistats
 
 - `maistats-song-info` is validated in CI and published by the scheduled
   `Song Database` workflow when the required secrets are configured.
-- `maistats-record-collector` and `maistats-discord-bot` are built as Docker
-  images by the GHCR workflow.
+- `maistats-record-collector` is built as a Docker image by the GHCR workflow.
 - `apps/maistats` is validated separately by the frontend workflow and is
   configured for Cloudflare/Vite deployment.

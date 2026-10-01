@@ -28,8 +28,6 @@ impl AppState {
             sega_password: self.config.sega_password.clone(),
             data_dir,
             cookie_path,
-            discord_bot_token: None,
-            discord_user_id: None,
         };
         MaimaiClient::new(&app_config)
     }

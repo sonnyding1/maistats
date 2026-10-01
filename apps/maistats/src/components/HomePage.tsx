@@ -4,8 +4,6 @@ import { useI18n } from '../app/i18n';
 import { HomeFooter } from './HomeFooter';
 import { RecordCollectorConnectPanel } from './RecordCollectorConnectPanel';
 
-const DISCORD_OAUTH_URL =
-  'https://discord.com/oauth2/authorize?client_id=1463175635974361183';
 const DISCORD_SUPPORT_URL = 'https://discord.gg/6d7QamA297';
 
 interface HomePageProps {
@@ -51,22 +49,12 @@ export function HomePage({
               </button>
 
               <a
-                href={DISCORD_OAUTH_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="home-menu-item"
-              >
-                <span className="home-menu-index">02</span>
-                <span>{t('home.discordCard.title')}</span>
-              </a>
-
-              <a
                 href={DISCORD_SUPPORT_URL}
                 target="_blank"
                 rel="noreferrer"
                 className="home-menu-item"
               >
-                <span className="home-menu-index">03</span>
+                <span className="home-menu-index">02</span>
                 <span>{t('home.supportCard.title')}</span>
               </a>
             </div>
