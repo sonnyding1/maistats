@@ -217,9 +217,12 @@ export function buildScoreRows(
     const matchedSheet = sheet ?? findMatchingSheet(songInfo, chartType, difficulty);
     const score = scoreByKey.get(key) ?? null;
     const estimatedInternalLevel = estimateInternalLevel(matchedSheet?.level);
-    const internalLevel = matchedSheet?.internal_level ?? estimatedInternalLevel;
-    const isInternalLevelEstimated =
-      matchedSheet?.internal_level === null && internalLevel !== null;
+    // `?? null` matters: with no matching sheet this is undefined, and
+    // `undefined === null` is false, which used to mark a fabricated level+0.6
+    // constant as if the song database had supplied it.
+    const sheetInternalLevel = matchedSheet?.internal_level ?? null;
+    const internalLevel = sheetInternalLevel ?? estimatedInternalLevel;
+    const isInternalLevelEstimated = sheetInternalLevel === null && internalLevel !== null;
     const latestPlayedAtUnix = parseMaimaiPlayedAtToUnix(score?.last_played_at);
 
     return {
