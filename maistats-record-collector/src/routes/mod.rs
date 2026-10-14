@@ -9,6 +9,7 @@ mod rating;
 mod recent;
 mod responses;
 mod scores;
+mod song_db;
 mod today;
 mod version;
 
@@ -38,7 +39,15 @@ pub(crate) fn create_routes(state: AppState) -> Router {
         .route("/api/poll", post(poll::trigger_poll))
         .route("/api/logs", get(logs::get_logs))
         .route("/api/today", get(today::get_today))
-        .route("/api/version", get(version::get_version));
+        .route("/api/version", get(version::get_version))
+        // Proxied so the dashboard keeps its song metadata when the shared
+        // song database upstream is unreachable.
+        .route("/api/song-db/data.json", get(song_db::get_data_json))
+        .route(
+            "/api/song-db/raveille_user_tier.json",
+            get(song_db::get_raveille_user_tier),
+        )
+        .route("/api/song-db/cover/{name}", get(song_db::get_cover));
 
     // Debug-only. Returns raw authenticated HTML, so it stays opt-in.
     if state.config.raw_html_debug {

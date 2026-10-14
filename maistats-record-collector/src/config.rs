@@ -1,5 +1,9 @@
 use eyre::WrapErr;
 
+/// Upstream hosting of the shared song database, used when `SONG_DATABASE_URL`
+/// is not set.
+const DEFAULT_SONG_DATABASE_URL: &str = "https://maimai-charts.muhwan.dev";
+
 #[derive(Debug, Clone)]
 pub(crate) struct RecordCollectorConfig {
     pub(crate) sega_id: String,
@@ -7,6 +11,9 @@ pub(crate) struct RecordCollectorConfig {
     pub(crate) port: u16,
     pub(crate) database_url: String,
     pub(crate) data_dir: String,
+    /// Base URL of the shared song database. The collector proxies and caches
+    /// it so the dashboard still loads when upstream is unreachable.
+    pub(crate) song_database_url: String,
     /// Enables `/api/debug/raw`, which returns raw authenticated SEGA HTML for
     /// parser work. Off unless `DEBUG_RAW_HTML` is set to a truthy value.
     pub(crate) raw_html_debug: bool,
@@ -24,6 +31,8 @@ impl RecordCollectorConfig {
         let database_url =
             std::env::var("DATABASE_URL").wrap_err("missing env var: DATABASE_URL")?;
         let data_dir = std::env::var("DATA_DIR").unwrap_or_else(|_| "data".to_string());
+        let song_database_url = std::env::var("SONG_DATABASE_URL")
+            .unwrap_or_else(|_| DEFAULT_SONG_DATABASE_URL.to_string());
         let raw_html_debug = std::env::var("DEBUG_RAW_HTML")
             .map(|value| {
                 matches!(
@@ -39,6 +48,7 @@ impl RecordCollectorConfig {
             port,
             database_url,
             data_dir,
+            song_database_url,
             raw_html_debug,
         })
     }
