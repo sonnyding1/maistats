@@ -4,6 +4,7 @@ mod logs;
 mod player;
 mod playlogs;
 mod poll;
+mod radar;
 mod rating;
 mod recent;
 mod responses;
@@ -32,6 +33,7 @@ pub(crate) fn create_routes(state: AppState) -> Router {
         .route("/api/songs/scores", get(scores::get_song_detail_scores))
         .route("/api/player", get(player::get_player))
         .route("/api/rating/targets", get(rating::get_rating_targets))
+        .route("/api/radar/tags", get(radar::get_radar_tags))
         .route("/api/recent", get(recent::get_recent))
         .route("/api/poll", post(poll::trigger_poll))
         .route("/api/logs", get(logs::get_logs))
