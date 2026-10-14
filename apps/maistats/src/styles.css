@@ -3919,6 +3919,28 @@ tbody tr:last-child td {
   margin-top: 10px;
 }
 
+/* Colour key for the spoke points; drawn here rather than by Plotly. */
+.radar-confidence {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--ink-dim);
+}
+
+.radar-confidence-swatch {
+  flex: 0 0 auto;
+  width: 140px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.radar-confidence-value {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
 .radar-controls {
   display: flex;
   flex-direction: column;

@@ -36,6 +36,17 @@ const CONFIDENCE_SCALE: [number, string][] = [
   [1, '#5b5bd6'],
 ];
 
+/**
+ * Colour-scale bounds for the spoke points. A single distinct count would make
+ * the scale degenerate, so the top of the range is nudged past the bottom.
+ */
+function chartCountRange(traits: { charts: number }[]): { min: number; max: number } {
+  if (traits.length === 0) return { min: 0, max: 1 };
+  const counts = traits.map((trait) => trait.charts);
+  const min = Math.min(...counts);
+  return { min, max: Math.max(...counts, min + 1) };
+}
+
 /** Plotly draws outside the cascade, so its colours come from the theme variables. */
 function cssVar(name: string, fallback: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -90,6 +101,7 @@ export function RadarPage({
 
   const traits = result?.traits ?? [];
   const hasEnoughAxes = traits.length >= 3;
+  const confidenceRange = chartCountRange(traits);
 
   useEffect(() => {
     const element = plotRef.current;
@@ -110,11 +122,11 @@ export function RadarPage({
       const closedLabels = [...labels, labels[0]];
       const spokes = [...result.traits.map((trait) => trait.reach), result.traits[0].reach];
       const baseline = [...radarBaseline(labels.length), 0.5];
-      const chartCounts = result.traits.map((trait) => trait.charts);
-      const closedCharts = [...chartCounts, chartCounts[0]];
-      // A single distinct count would make the colour scale degenerate.
-      const chartMin = Math.min(...chartCounts);
-      const chartMax = Math.max(...chartCounts, chartMin + 1);
+      const closedCharts = [
+        ...result.traits.map((trait) => trait.charts),
+        result.traits[0].charts,
+      ];
+      const scale = chartCountRange(result.traits);
 
       const traces = [
         {
@@ -140,22 +152,13 @@ export function RadarPage({
             size: 9,
             color: closedCharts,
             colorscale: CONFIDENCE_SCALE,
-            cmin: chartMin,
-            cmax: chartMax,
+            cmin: scale.min,
+            cmax: scale.max,
             line: { color: ink, width: 1 },
-            showscale: true,
-            colorbar: {
-              title: {
-                text: t('radar.charts'),
-                side: 'right',
-                font: { size: 10, color: inkDim },
-              },
-              thickness: 10,
-              len: 0.5,
-              outlinewidth: 0,
-              tickfont: { size: 9, color: inkDim },
-              x: 1.0,
-            },
+            // Plotly's own colorbar bands the gradient and stacks a rotated
+            // title against the ticks, so the legend is drawn in the page
+            // instead - see the swatch below the plot.
+            showscale: false,
           },
           customdata: result.traits.map((trait) => trait.charts),
           hovertemplate: '%{theta}<br>%{r:.3f} · %{customdata} charts<extra></extra>',
@@ -169,7 +172,7 @@ export function RadarPage({
         // below kills wheel zoom. `fixedrange` is not a polar axis attribute -
         // Plotly accepts it and silently ignores it, so it is not used here.
         dragmode: false,
-        margin: { l: 90, r: 120, t: 50, b: 50 },
+        margin: { l: 90, r: 90, t: 50, b: 50 },
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
         font: { family: FONT_FAMILY, color: ink, size: 12 },
@@ -304,6 +307,18 @@ export function RadarPage({
               <div className="radar-plot" ref={plotRef} />
               <p className="settings-meta radar-note">{t('radar.baselineNote')}</p>
               <p className="settings-meta radar-note">{t('radar.colorNote')}</p>
+              <div className="radar-confidence">
+                <span className="radar-confidence-value">{confidenceRange.min}</span>
+                <span
+                  className="radar-confidence-swatch"
+                  aria-hidden="true"
+                  style={{
+                    background: `linear-gradient(90deg, ${CONFIDENCE_SCALE[0][1]}, ${CONFIDENCE_SCALE[1][1]})`,
+                  }}
+                />
+                <span className="radar-confidence-value">{confidenceRange.max}</span>
+                <span className="radar-confidence-unit">{t('radar.charts')}</span>
+              </div>
             </>
           )}
         </section>
