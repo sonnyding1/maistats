@@ -24,8 +24,15 @@ const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** A constant needs at least this many of your charts before it seeds the curve. */
 const MIN_CURVE_CHARTS = 5;
-/** Spoke scale: a t-statistic of this magnitude reaches the outer ring. */
-const T_FULL_SCALE = 8;
+/**
+ * Radial scale, in achievement points: a mean residual of half this value
+ * reaches an outer ring.
+ *
+ * Spoke length is the raw gap, so the wheel and the trait table agree. How well
+ * that gap is evidenced is carried by the point colour instead - the two were
+ * previously conflated into the radius via the t-statistic.
+ */
+const MEAN_FULL_SCALE = 4;
 
 /**
  * Angular order for the spokes, as tag ids.
@@ -157,9 +164,9 @@ export interface ResidualTrait {
   charts: number;
   /** Mean achievement deviation against your own curve, in percentage points. */
   meanResidual: number;
-  /** Mean deviation in units of the standard error; the spoke scale. */
+  /** Mean deviation in units of the standard error; how well evidenced it is. */
   tStat: number;
-  /** 0..1 radial position, 0.5 being your own average. */
+  /** 0..1 radial position from the mean residual alone; 0.5 is your average. */
   reach: number;
 }
 
@@ -278,7 +285,7 @@ export function buildResidualRadar(input: BuildRadarInput): ResidualRadarResult 
       charts: values.length,
       meanResidual,
       tStat,
-      reach: clamp(0.5 + tStat / T_FULL_SCALE, 0.1, 1),
+      reach: clamp(0.5 + meanResidual / MEAN_FULL_SCALE, 0.1, 1),
     });
   }
 

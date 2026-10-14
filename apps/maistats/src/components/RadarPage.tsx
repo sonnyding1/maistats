@@ -30,6 +30,12 @@ const MAX_AXES = 14;
 const SERIES_COLOR = '#8b8bf0';
 const SERIES_FILL = 'rgba(139, 139, 240, 0.22)';
 
+/** Point colour runs from "a handful of charts" to "plenty of charts". */
+const CONFIDENCE_SCALE: [number, string][] = [
+  [0, '#dcdcfb'],
+  [1, '#5b5bd6'],
+];
+
 /** Plotly draws outside the cascade, so its colours come from the theme variables. */
 function cssVar(name: string, fallback: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -104,6 +110,11 @@ export function RadarPage({
       const closedLabels = [...labels, labels[0]];
       const spokes = [...result.traits.map((trait) => trait.reach), result.traits[0].reach];
       const baseline = [...radarBaseline(labels.length), 0.5];
+      const chartCounts = result.traits.map((trait) => trait.charts);
+      const closedCharts = [...chartCounts, chartCounts[0]];
+      // A single distinct count would make the colour scale degenerate.
+      const chartMin = Math.min(...chartCounts);
+      const chartMax = Math.max(...chartCounts, chartMin + 1);
 
       const traces = [
         {
@@ -119,9 +130,33 @@ export function RadarPage({
           type: 'scatterpolar',
           r: spokes,
           theta: closedLabels,
+          mode: 'lines+markers',
           fill: 'toself',
           fillcolor: SERIES_FILL,
           line: { color: SERIES_COLOR, width: 2 },
+          // Length is the size of the gap, colour is how many charts back it, so
+          // a long pale spoke reads as "big gap, little evidence".
+          marker: {
+            size: 9,
+            color: closedCharts,
+            colorscale: CONFIDENCE_SCALE,
+            cmin: chartMin,
+            cmax: chartMax,
+            line: { color: ink, width: 1 },
+            showscale: true,
+            colorbar: {
+              title: {
+                text: t('radar.charts'),
+                side: 'right',
+                font: { size: 10, color: inkDim },
+              },
+              thickness: 10,
+              len: 0.5,
+              outlinewidth: 0,
+              tickfont: { size: 9, color: inkDim },
+              x: 1.0,
+            },
+          },
           customdata: result.traits.map((trait) => trait.charts),
           hovertemplate: '%{theta}<br>%{r:.3f} · %{customdata} charts<extra></extra>',
           showlegend: false,
@@ -134,7 +169,7 @@ export function RadarPage({
         // below kills wheel zoom. `fixedrange` is not a polar axis attribute -
         // Plotly accepts it and silently ignores it, so it is not used here.
         dragmode: false,
-        margin: { l: 90, r: 90, t: 50, b: 50 },
+        margin: { l: 90, r: 120, t: 50, b: 50 },
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
         font: { family: FONT_FAMILY, color: ink, size: 12 },
@@ -268,6 +303,7 @@ export function RadarPage({
             <>
               <div className="radar-plot" ref={plotRef} />
               <p className="settings-meta radar-note">{t('radar.baselineNote')}</p>
+              <p className="settings-meta radar-note">{t('radar.colorNote')}</p>
             </>
           )}
         </section>
