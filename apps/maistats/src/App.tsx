@@ -72,6 +72,7 @@ import { SettingsPage } from './components/SettingsPage';
 import { SetupGuidePage } from './components/SetupGuidePage';
 import { SongDetailModal } from './components/SongDetailModal';
 import { PlotPage } from './components/PlotPage';
+import { RadarPage } from './components/RadarPage';
 import { ScoreHistoryModal } from './components/ScoreHistoryModal';
 import { UserTierPage, type UserTierSongRow } from './components/UserTierPage';
 import type { SongDetailTarget } from './components/TableActionCells';
@@ -90,7 +91,7 @@ import type {
 } from './types';
 import logoUrl from './assets/logo.png';
 
-type AppPage = 'home' | 'setup' | 'scores' | 'rating' | 'tiers' | 'playlogs' | 'plot' | 'settings';
+type AppPage = 'home' | 'setup' | 'scores' | 'rating' | 'tiers' | 'playlogs' | 'plot' | 'radar' | 'settings';
 type RatedScoreRow = ScoreRow & { rating: number; version: string };
 type ThemePreference = 'system' | 'light' | 'dark';
 type LoadingErrorState =
@@ -115,6 +116,9 @@ function readPageFromHash(hash: string): AppPage {
   }
   if (hash === '#plot') {
     return 'plot';
+  }
+  if (hash === '#radar') {
+    return 'radar';
   }
   if (hash === '#settings') {
     return 'settings';
@@ -310,6 +314,15 @@ function PlotIcon() {
       <circle cx="17" cy="11" r="2" />
       <path d="M3 20V4" />
       <path d="M3 20h18" />
+    </svg>
+  );
+}
+
+function RadarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" />
+      <path d="M12 8.4l4.2 2.4v4.8L12 18l-4.2-2.4v-4.8z" />
     </svg>
   );
 }
@@ -1454,7 +1467,9 @@ function App() {
             ? '#tiers'
             : page === 'plot'
               ? '#plot'
-              : page === 'settings'
+              : page === 'radar'
+                ? '#radar'
+                : page === 'settings'
                 ? '#settings'
                 : '#scores';
     if (window.location.hash !== nextHash) {
@@ -1488,6 +1503,7 @@ function App() {
       { page: 'tiers', label: t('nav.tiers'), Icon: TiersIcon },
       { page: 'playlogs', label: t('nav.playlogs'), Icon: PlaylogsIcon },
       { page: 'plot', label: t('nav.plot'), Icon: PlotIcon },
+      { page: 'radar', label: t('nav.radar'), Icon: RadarIcon },
       { page: 'settings', label: t('nav.settings'), Icon: SettingsIcon },
     ],
     [t],
@@ -1785,6 +1801,13 @@ function App() {
             userTierGroups={userTierGroups}
             isLoading={isLoading}
             onOpenSongDetail={handleOpenSongDetail}
+          />
+        ) : activePage === 'radar' ? (
+          <RadarPage
+            sidebarTopContent={desktopSidebarTopContent}
+            rows={scoreData}
+            recordCollectorUrl={recordCollectorUrl}
+            isLoading={isLoading}
           />
         ) : (
           <SettingsPage
