@@ -126,6 +126,16 @@ export function RadarPage({
         ...result.traits.map((trait) => trait.charts),
         result.traits[0].charts,
       ];
+      // The polygon closes on itself, so every per-point array has to repeat the
+      // first entry. Without it the duplicated first vertex - which is drawn on
+      // top of the real one - has no data, and its hover reads blank.
+      // Plotly ignores number formats on indexed customdata entries, so the gap
+      // is pre-formatted with an explicit sign.
+      const hoverRow = (trait: { meanResidual: number; charts: number }) => [
+        `${trait.meanResidual >= 0 ? '+' : ''}${trait.meanResidual.toFixed(2)}`,
+        trait.charts,
+      ];
+      const closedHover = [...result.traits.map(hoverRow), hoverRow(result.traits[0])];
       const scale = chartCountRange(result.traits);
 
       const traces = [
@@ -160,8 +170,10 @@ export function RadarPage({
             // instead - see the swatch below the plot.
             showscale: false,
           },
-          customdata: result.traits.map((trait) => trait.charts),
-          hovertemplate: '%{theta}<br>%{r:.3f} · %{customdata} charts<extra></extra>',
+          customdata: closedHover,
+          // Report the gap in points rather than the normalised radial position.
+          hovertemplate:
+            '%{theta}<br>%{customdata[0]} pts · %{customdata[1]} charts<extra></extra>',
           showlegend: false,
         },
       ];
